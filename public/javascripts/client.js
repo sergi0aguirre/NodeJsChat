@@ -6,8 +6,9 @@ $(document).ready(function(){
 		if(name!=""){	
 			$('.chat_bubble').show();
 			var server= io.connect(host);	
-			server.on('connect', function(data){
-				$('#welcome_chat').html('');
+			$('#welcome_chat').html('');
+			$('#chat_container').append("<li>Connecting ...!</li>");
+			server.on('connect', function(data){				
 				$('#chat_container').append("<li>Connected to the Server!</li>");
 				server.emit('join', name);
 			});
