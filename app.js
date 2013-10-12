@@ -59,6 +59,11 @@ app.listen(process.env.PORT || 3000, function(){
 //Chat Websocket
 
 var io = socket.listen(app);
+io.configure(function () { 
+  io.set("transports", ["xhr-polling"]); 
+  io.set("polling duration", 10); 
+});
+
 
 io.sockets.on('connection', function(client){
   console.log('client comming');
@@ -83,4 +88,6 @@ io.sockets.on('connection', function(client){
   });
 
 });
+
+
 
