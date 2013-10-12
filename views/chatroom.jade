@@ -1,7 +1,16 @@
+script(src="http://localhost:5000/socket.io/socket.io.js")
+script(src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js")
+script(type='text/javascript', src='/javascripts/client.js')
 .container
   .hero-unit
     h2 ChatRoom!
-    p Please provide your nickname and join this chat room  
-    br
-    br
-    a.btn.btn-primary.btn-large(href="#") Join now
+    #welcome_chat
+      p Please provide your nickname and join this chat room  
+      br
+      br
+      a.btn.btn-primary.btn-large( id='join') Join now
+    .chat_bubble
+      blockquote.rectangle-speech-border
+        ul#chat_container
+      input#message.span6.btn-large(placeholder='Write something')  
+      button#send.btn.btn-success.btn-large Send 

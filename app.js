@@ -4,7 +4,10 @@
  */
 
 var express = require('express')
-  , routes = require('./routes');
+  , routes = require('./routes')
+  ,socket = require('socket.io')
+  ,http = require('http');
+
 
 var app = module.exports = express.createServer();
 
@@ -46,6 +49,38 @@ app.get('/', routes.index);
 app.get('/chatroom', routes.chatroom);
 app.get('/about', routes.about);
 
+
+
+
 app.listen(process.env.PORT || 3000, function(){
   console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
 });
+
+//Chat Websocket
+
+var io = socket.listen(app);
+
+io.sockets.on('connection', function(client){
+  console.log('client comming');
+
+  //client.emit('messages', {hello: 'Hello world'});
+  //client.emit('messages', 'Welcome to Chat');
+
+  client.on('messages', function(data){
+    client.get('nickname',function(err,name){
+      console.log(data);
+        client.emit('messages','<span>'+name+ ':</span> '+ data); // Send message to sender
+        client.broadcast.emit('messages','<span>'+name+'</span>: '+data); // Send message to everyone BUT sender
+    });
+  });
+
+
+  client.on('join', function(name){
+    client.set('nickname',name);
+    console.log(name+' logged to chat');
+    client.emit('messages','Welcome <span>'+name+ ':</span>  !'); // Send message to sender
+    client.broadcast.emit('messages','<span>'+name+'</span> has joined to the room'); // Send message to everyone BUT sender
+  });
+
+});
+
