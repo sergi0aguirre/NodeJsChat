@@ -1,10 +1,11 @@
+var host = "http://"+window.location.hostname;
 $(document).ready(function(){
 	$('.chat_bubble').hide();
 	$('#join').click(function(){
 		name=prompt('Enter your display name');
 		if(name!=""){	
 			$('.chat_bubble').show();
-			var server= io.connect('http://localhost:5000');	
+			var server= io.connect(host);	
 			server.on('connect', function(data){
 				$('#welcome_chat').html('');
 				$('#chat_container').append("<li>Connected to the Server!</li>");
