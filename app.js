@@ -57,6 +57,15 @@ app.listen(process.env.PORT || 3000, function(){
 });
 
 //Chat Websocket
+var messages= [];
+
+var storeMessages= function(name,data){
+  messages.push({name: name, data:data});
+  if (messages.length > 10){
+      messages.shift();
+  }
+}
+
 
 var io = socket.listen(app);
 io.configure(function () { 
@@ -74,6 +83,7 @@ io.sockets.on('connection', function(client){
   client.on('messages', function(data){
     client.get('nickname',function(err,name){
       console.log(data);
+        storeMessages(name,data);
         client.emit('messages','<span>'+name+ ':</span> '+ data); // Send message to sender
         client.broadcast.emit('messages','<span>'+name+'</span>: '+data); // Send message to everyone BUT sender
     });
@@ -85,6 +95,9 @@ io.sockets.on('connection', function(client){
     console.log(name+' logged to chat');
     client.emit('messages','Welcome <span>'+name+ ':</span>  !'); // Send message to sender
     client.broadcast.emit('messages','<span>'+name+'</span> has joined to the room'); // Send message to everyone BUT sender
+    messages.forEach(function(message){
+        client.emit('messages','<span>'+message.name+ ':</span> '+ message.data);
+    });
   });
 
 });
