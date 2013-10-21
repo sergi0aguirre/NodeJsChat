@@ -6,7 +6,9 @@
 var express = require('express')
   , routes = require('./routes')
   ,socket = require('socket.io')
-  ,http = require('http');
+  ,http = require('http')
+  ,MongoClient = require('mongodb').MongoClient
+  , format = require('util').format; 
 
 
 var app = module.exports = express.createServer();
@@ -57,13 +59,15 @@ app.listen(process.env.PORT || 3000, function(){
 });
 
 //Chat Websocket
-var messages= [];
 
-var storeMessages= function(name,data){
-  messages.push({name: name, data:data});
-  if (messages.length > 10){
-      messages.shift();
-  }
+var mongo_conection=process.env.MONGO_NOJSCHAT_URL;
+
+
+var storeMessages= function(collection,name,data){
+  collection.insert({name :name, data: data}, function(err, records) {
+    if (err) throw err;
+    console.log("Record added as "+records[0]._id);
+  });
 }
 
 
@@ -73,32 +77,48 @@ io.configure(function () {
   io.set("polling duration", 10); 
 });
 
+console.log(mongo_conection);
 
-io.sockets.on('connection', function(client){
-  console.log('client comming');
+MongoClient.connect(mongo_conection, function(err, db) {
 
-  //client.emit('messages', {hello: 'Hello world'});
-  //client.emit('messages', 'Welcome to Chat');
+    //connect away
+    
+        if (err) throw err;
+        console.log("Connected to Database");
+        var collection = db.collection('nodeJSChat');
+  io.sockets.on('connection', function(client){
+    console.log('client comming');
 
-  client.on('messages', function(data){
-    client.get('nickname',function(err,name){
-      console.log(data);
-        storeMessages(name,data);
-        client.emit('messages','<span>'+name+ ':</span> '+ data); // Send message to sender
-        client.broadcast.emit('messages','<span>'+name+'</span>: '+data); // Send message to everyone BUT sender
-    });
-  });
+    //client.emit('messages', {hello: 'Hello world'});
+    //client.emit('messages', 'Welcome to Chat');
 
 
-  client.on('join', function(name){
-    client.set('nickname',name);
-    console.log(name+' logged to chat');
-    client.emit('messages','Welcome <span>'+name+ ':</span>  !'); // Send message to sender
-    client.broadcast.emit('messages','<span>'+name+'</span> has joined to the room'); // Send message to everyone BUT sender
-    messages.forEach(function(message){
-        client.emit('messages','<span>'+message.name+ ':</span> '+ message.data);
-    });
-  });
+          client.on('messages', function(data){
+            client.get('nickname',function(err,name){
+              console.log(data);
+                storeMessages(collection,name,data);
+                client.emit('messages','<span>'+name+ ':</span> '+ data); // Send message to sender
+                client.broadcast.emit('messages','<span>'+name+'</span>: '+data); // Send message to everyone BUT sender
+            });
+          });
+
+
+          client.on('join', function(name){
+            client.set('nickname',name);
+            console.log(name+' logged to chat');
+            
+            collection.find().sort('_id','ascending').each(function(err, message) {
+                if(message != null)
+                client.emit('messages','<span>'+message.name+ ':</span> '+ message.data);
+              });
+                
+            client.emit('messages','Welcome <span>'+name+ ':</span>  !'); // Send message to sender
+            client.broadcast.emit('messages','<span>'+name+'</span> has joined to the room'); // Send message to everyone BUT sender
+
+          });
+
+
+      });
 
 });
 
