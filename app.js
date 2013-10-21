@@ -60,7 +60,7 @@ app.listen(process.env.PORT || 3000, function(){
 
 //Chat Websocket
 
-var mongo_conection=process.env.MONGO_NOJSCHAT_URL;
+var mongo_conection=process.env.MONGO_NOJSCHAT_URL == undefined ? process.env.MONGOHQ_URL : process.env.MONGO_NOJSCHAT_URL;
 
 
 var storeMessages= function(collection,name,data){
